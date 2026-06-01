@@ -23,16 +23,13 @@ class ItemForm(forms.ModelForm):
 class SignupForm(UserCreationForm):
     email = forms.EmailField(
         label="학교 이메일",
-        help_text="@dankook.ac.kr 이메일만 사용 가능합니다.",
-        widget=forms.EmailInput(attrs={"class": CTRL}),
+        help_text="학번@dankook.ac.kr 형식으로 입력하세요. 학번이 아이디로 사용됩니다.",
+        widget=forms.EmailInput(attrs={"class": CTRL, "placeholder": "20240001@dankook.ac.kr"}),
     )
 
     class Meta:
         model = User
-        fields = ["username", "email", "password1", "password2"]
-        widgets = {
-            "username": forms.TextInput(attrs={"class": CTRL}),
-        }
+        fields = ["email", "password1", "password2"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -43,6 +40,9 @@ class SignupForm(UserCreationForm):
         email = self.cleaned_data.get("email")
         if not email.endswith("@dankook.ac.kr"):
             raise forms.ValidationError("단국대학교 이메일(@dankook.ac.kr)만 가입할 수 있습니다.")
+        username = email.split("@")[0]
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("이미 가입된 학번입니다.")
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("이미 사용 중인 이메일입니다.")
         return email
@@ -50,6 +50,7 @@ class SignupForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
+        user.username = self.cleaned_data["email"].split("@")[0]
         if commit:
             user.save()
         return user
