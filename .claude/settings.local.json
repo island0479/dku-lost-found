@@ -5,7 +5,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/api/auth/me/)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
       "Bash(npm install *)",
-      "Bash(python manage.py check)"
+      "Bash(python manage.py check)",
+      "Bash(python manage.py makemigrations)",
+      "Bash(python manage.py migrate)"
     ]
   }
 }

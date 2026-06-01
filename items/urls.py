@@ -18,4 +18,8 @@ urlpatterns = [
     path("item/<int:pk>/inquiry/<int:inq_pk>/edit/", views.inquiry_edit_form, name="inquiry_edit_form"),
     path("item/<int:pk>/inquiry/<int:inq_pk>/save/", views.inquiry_save, name="inquiry_save"),
     path("item/<int:pk>/inquiry/<int:inq_pk>/delete/", views.inquiry_delete, name="inquiry_delete"),
+    path("chat/<int:inq_pk>/", views.chat, name="chat"),
+    path("chat/<int:inq_pk>/messages/", views.chat_messages_partial, name="chat_messages"),
+    path("chat/<int:inq_pk>/send/", views.chat_send, name="chat_send"),
+    path("chats/", views.my_chats, name="my_chats"),
 ]

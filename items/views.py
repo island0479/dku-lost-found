@@ -4,7 +4,8 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
-from .models import Item, Category, Inquiry, ItemImage
+from django.db.models import Q, Max
+from .models import Item, Category, Inquiry, ItemImage, Message
 from .forms import ItemForm, InquiryForm, SignupForm
 
 
@@ -245,6 +246,54 @@ def change_password(request):
     for field in form.fields.values():
         field.widget.attrs['class'] = 'form-control'
     return render(request, "auth/password.html", {"form": form})
+
+
+@login_required
+def chat(request, inq_pk):
+    inquiry = get_object_or_404(
+        Inquiry.objects.select_related('user', 'item__registered_by'), pk=inq_pk
+    )
+    if request.user != inquiry.user and request.user != inquiry.item.registered_by and not request.user.is_staff:
+        return HttpResponseForbidden()
+    chat_messages = inquiry.messages.select_related('sender').all()
+    return render(request, 'items/chat.html', {
+        'inquiry': inquiry, 'item': inquiry.item, 'chat_messages': chat_messages,
+    })
+
+
+@login_required
+def chat_messages_partial(request, inq_pk):
+    inquiry = get_object_or_404(Inquiry, pk=inq_pk)
+    if request.user != inquiry.user and request.user != inquiry.item.registered_by and not request.user.is_staff:
+        return HttpResponseForbidden()
+    chat_messages = inquiry.messages.select_related('sender').all()
+    return render(request, 'items/partials/chat_messages.html', {'chat_messages': chat_messages})
+
+
+@login_required
+def chat_send(request, inq_pk):
+    inquiry = get_object_or_404(Inquiry, pk=inq_pk)
+    if request.user != inquiry.user and request.user != inquiry.item.registered_by and not request.user.is_staff:
+        return HttpResponseForbidden()
+    if request.method == 'POST':
+        content = request.POST.get('content', '').strip()
+        if content:
+            Message.objects.create(inquiry=inquiry, sender=request.user, content=content)
+    chat_messages = inquiry.messages.select_related('sender').all()
+    return render(request, 'items/partials/chat_messages.html', {'chat_messages': chat_messages})
+
+
+@login_required
+def my_chats(request):
+    inquiries = (
+        Inquiry.objects
+        .filter(Q(user=request.user) | Q(item__registered_by=request.user))
+        .select_related('user', 'item', 'item__registered_by')
+        .annotate(last_msg_time=Max('messages__created_at'))
+        .order_by('-last_msg_time', '-created_at')
+        .distinct()
+    )
+    return render(request, 'items/my_chats.html', {'inquiries': inquiries})
 
 
 @login_required

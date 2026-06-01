@@ -52,7 +52,7 @@ class Inquiry(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="inquiries")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     message = models.TextField()
-    contact = models.CharField(max_length=100)
+    contact = models.CharField(max_length=100, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -62,3 +62,13 @@ class Inquiry(models.Model):
         verbose_name = "문의"
         verbose_name_plural = "문의"
         ordering = ["-created_at"]
+
+
+class Message(models.Model):
+    inquiry = models.ForeignKey(Inquiry, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]

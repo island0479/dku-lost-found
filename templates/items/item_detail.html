@@ -144,10 +144,14 @@
                   <span style="color:var(--text-muted);font-size:0.75rem">{{ inq.created_at|date:"m/d H:i" }}</span>
                 </div>
                 <p class="mb-1" style="font-size:0.875rem;white-space:pre-line">{{ inq.message }}</p>
-                <p class="mb-0" style="font-size:0.8rem;color:var(--text-muted)">연락처: {{ inq.contact }}</p>
                 {% if item.returned_to == inq %}
-                  <span class="badge-found mt-2 d-inline-block">반환 대상</span>
+                  <span class="badge-found mt-1 mb-2 d-inline-block">반환 대상</span>
                 {% endif %}
+                <div class="mt-2">
+                  <a href="{% url 'chat' inq.pk %}" class="btn btn-dark btn-sm">
+                    <i class="bi bi-chat me-1"></i>채팅하기
+                  </a>
+                </div>
               </div>
             {% endfor %}
           {% else %}

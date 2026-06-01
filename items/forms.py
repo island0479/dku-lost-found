@@ -59,19 +59,12 @@ class SignupForm(UserCreationForm):
 class InquiryForm(forms.ModelForm):
     class Meta:
         model = Inquiry
-        fields = ["message", "contact"]
-        labels = {
-            "message": "문의 내용",
-            "contact": "연락처 (전화번호 또는 이메일)",
-        }
+        fields = ["message"]
+        labels = {"message": "문의 내용"}
         widgets = {
             "message": forms.Textarea(attrs={
                 "rows": 3,
                 "class": CTRL,
-                "placeholder": "내 물건인 것 같은 이유나 특징을 적어주세요.",
-            }),
-            "contact": forms.TextInput(attrs={
-                "class": CTRL,
-                "placeholder": "등록자가 연락할 수 있는 번호나 이메일",
+                "placeholder": "내 물건인 것 같은 이유나 특징을 적어주세요. 등록자와 채팅으로 소통할 수 있습니다.",
             }),
         }
