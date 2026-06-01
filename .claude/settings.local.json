@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"E:\\\\Aegis_QuantumJump\\\\Aegis-QuantumJump-project1\\\\frontend\\\\src\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/api/auth/me/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(npm install *)",
+      "Bash(python manage.py check)"
+    ]
+  }
+}

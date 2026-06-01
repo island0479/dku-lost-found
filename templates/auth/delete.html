@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-card">
+  <div class="card">
+    <div class="card-body">
+      <p class="auth-title">계정 탈퇴</p>
+      <p class="auth-subtitle" style="color:#D92B2B">탈퇴 시 등록한 분실물 및 문의 내역이 모두 삭제됩니다</p>
+      {% if error %}
+        <div class="alert-danger mb-3">{{ error }}</div>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-4">
+          <label class="form-label">비밀번호 확인</label>
+          <input type="password" name="password" class="form-control" required
+                 placeholder="계속하려면 비밀번호를 입력하세요">
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-dark"
+                  style="background:#D92B2B !important;border-color:#D92B2B !important"
+                  onclick="return confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')">
+            탈퇴
+          </button>
+          <button type="button" onclick="history.back()" class="btn btn-outline-secondary">취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

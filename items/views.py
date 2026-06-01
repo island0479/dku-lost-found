@@ -1,0 +1,259 @@
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, HttpResponseForbidden
+from django.contrib import messages
+from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from .models import Item, Category, Inquiry, ItemImage
+from .forms import ItemForm, InquiryForm, SignupForm
+
+
+def _filter_items(request):
+    qs = Item.objects.select_related('category').prefetch_related('images')
+    q = request.GET.get("q", "").strip()
+    category_id = request.GET.get("category", "")
+    show_all = request.GET.get("show_all", "")
+    if q:
+        qs = qs.filter(title__icontains=q)
+    if category_id:
+        qs = qs.filter(category_id=category_id)
+    if not show_all:
+        qs = qs.filter(status="found")
+    return qs, q, category_id, bool(show_all)
+
+
+def item_list(request):
+    items, q, category_id, show_all = _filter_items(request)
+    if request.headers.get('HX-Request'):
+        return render(request, "items/partials/item_cards.html", {"items": items})
+    return render(request, "items/item_list.html", {
+        "items": items,
+        "categories": Category.objects.all(),
+        "q": q,
+        "selected_category": category_id,
+        "show_all": show_all,
+    })
+
+
+def item_detail(request, pk):
+    item = get_object_or_404(
+        Item.objects.select_related('category', 'registered_by', 'returned_to__user')
+                    .prefetch_related('images', 'inquiries__user'),
+        pk=pk,
+    )
+    user = request.user
+    can_manage = user.is_authenticated and (user.is_staff or user == item.registered_by)
+
+    all_images = []
+    if item.image:
+        all_images.append(item.image.url)
+    all_images.extend(img.image.url for img in item.images.all())
+
+    ctx = {
+        "item": item,
+        "can_manage": can_manage,
+        "all_images": all_images,
+    }
+    if can_manage:
+        ctx["inquiries"] = item.inquiries.select_related("user").all()
+    elif user.is_authenticated:
+        ctx["my_inquiry"] = item.inquiries.filter(user=user).first()
+        ctx["inquiry_form"] = InquiryForm()
+
+    return render(request, "items/item_detail.html", ctx)
+
+
+@login_required
+def item_create(request):
+    if request.method == "POST":
+        form = ItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.registered_by = request.user
+            item.save()
+            for i, img in enumerate(request.FILES.getlist("images")):
+                ItemImage.objects.create(item=item, image=img, order=i)
+            return redirect("item_detail", pk=item.pk)
+    else:
+        form = ItemForm()
+    return render(request, "items/item_form.html", {"form": form, "action": "등록"})
+
+
+@login_required
+def item_update(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    if not (request.user.is_staff or request.user == item.registered_by):
+        return HttpResponseForbidden()
+    if request.method == "POST":
+        form = ItemForm(request.POST, request.FILES, instance=item)
+        if form.is_valid():
+            form.save()
+            existing_count = item.images.count()
+            for i, img in enumerate(request.FILES.getlist("images")):
+                ItemImage.objects.create(item=item, image=img, order=existing_count + i)
+            return redirect("item_detail", pk=item.pk)
+    else:
+        form = ItemForm(instance=item)
+
+    all_images = []
+    if item.image:
+        all_images.append(item.image.url)
+    all_images.extend(img.image.url for img in item.images.all())
+    return render(request, "items/item_form.html", {
+        "form": form, "action": "수정", "item": item, "all_images": all_images,
+    })
+
+
+@login_required
+def item_delete(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    if not (request.user.is_staff or request.user == item.registered_by):
+        return HttpResponseForbidden()
+    if request.method == "POST":
+        item.delete()
+        messages.success(request, "분실물이 삭제됐습니다.")
+        return redirect("my_items")
+    return redirect("item_detail", pk=pk)
+
+
+@login_required
+def item_return(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    if not (request.user.is_staff or request.user == item.registered_by):
+        return HttpResponseForbidden()
+    if request.method == "POST":
+        inq_id = request.POST.get("inquiry_id")
+        if inq_id:
+            item.returned_to = get_object_or_404(Inquiry, pk=inq_id, item=item)
+        item.status = "returned"
+        item.save()
+    return redirect("item_detail", pk=pk)
+
+
+@login_required
+def item_revert(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    if not (request.user.is_staff or request.user == item.registered_by):
+        return HttpResponseForbidden()
+    if request.method == "POST":
+        item.status = "found"
+        item.returned_to = None
+        item.save()
+    return redirect("item_detail", pk=pk)
+
+
+@login_required
+def inquiry_create(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    if request.user.is_staff or request.user == item.registered_by:
+        return HttpResponseForbidden()
+    if item.inquiries.filter(user=request.user).exists():
+        messages.warning(request, "이미 문의를 등록하셨습니다.")
+        return redirect("item_detail", pk=pk)
+    if request.method == "POST":
+        form = InquiryForm(request.POST)
+        if form.is_valid():
+            inq = form.save(commit=False)
+            inq.item = item
+            inq.user = request.user
+            inq.save()
+            if request.headers.get('HX-Request'):
+                return render(request, "items/partials/inquiry_section.html", {
+                    "item": item, "my_inquiry": inq,
+                })
+            messages.success(request, "문의가 접수됐습니다.")
+    return redirect("item_detail", pk=pk)
+
+
+def inquiry_display(request, pk, inq_pk):
+    item = get_object_or_404(Item, pk=pk)
+    inq = get_object_or_404(Inquiry, pk=inq_pk, item=item)
+    return render(request, "items/partials/inquiry_display.html", {"item": item, "inq": inq})
+
+
+@login_required
+def inquiry_edit_form(request, pk, inq_pk):
+    item = get_object_or_404(Item, pk=pk)
+    inq = get_object_or_404(Inquiry, pk=inq_pk, item=item, user=request.user)
+    return render(request, "items/partials/inquiry_edit_form.html", {
+        "item": item, "inq": inq, "form": InquiryForm(instance=inq),
+    })
+
+
+@login_required
+def inquiry_save(request, pk, inq_pk):
+    item = get_object_or_404(Item, pk=pk)
+    inq = get_object_or_404(Inquiry, pk=inq_pk, item=item, user=request.user)
+    if request.method == "POST":
+        form = InquiryForm(request.POST, instance=inq)
+        if form.is_valid():
+            inq = form.save()
+            if request.headers.get('HX-Request'):
+                return render(request, "items/partials/inquiry_display.html", {
+                    "item": item, "inq": inq,
+                })
+    return redirect("item_detail", pk=pk)
+
+
+@login_required
+def inquiry_delete(request, pk, inq_pk):
+    item = get_object_or_404(Item, pk=pk)
+    inq = get_object_or_404(Inquiry, pk=inq_pk, item=item)
+    if request.user != inq.user and not request.user.is_staff:
+        return HttpResponseForbidden()
+    if request.method == "POST":
+        inq.delete()
+        if request.headers.get('HX-Request'):
+            return render(request, "items/partials/inquiry_section.html", {
+                "item": item, "my_inquiry": None, "inquiry_form": InquiryForm(),
+            })
+    return redirect("item_detail", pk=pk)
+
+
+@login_required
+def my_items(request):
+    items = Item.objects.filter(registered_by=request.user).prefetch_related('images').select_related('category')
+    return render(request, "items/my_items.html", {"items": items})
+
+
+def signup(request):
+    if request.method == "POST":
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("item_list")
+    else:
+        form = SignupForm()
+    return render(request, "registration/signup.html", {"form": form})
+
+
+@login_required
+def change_password(request):
+    if request.method == "POST":
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, "비밀번호가 변경됐습니다.")
+            return redirect("item_list")
+    else:
+        form = PasswordChangeForm(request.user)
+    form.fields['old_password'].label = "현재 비밀번호"
+    form.fields['new_password1'].label = "새 비밀번호"
+    form.fields['new_password2'].label = "새 비밀번호 확인"
+    for field in form.fields.values():
+        field.widget.attrs['class'] = 'form-control'
+    return render(request, "auth/password.html", {"form": form})
+
+
+@login_required
+def delete_account(request):
+    error = None
+    if request.method == "POST":
+        password = request.POST.get("password", "")
+        if request.user.check_password(password):
+            request.user.delete()
+            return redirect("item_list")
+        error = "비밀번호가 올바르지 않습니다."
+    return render(request, "auth/delete.html", {"error": error})

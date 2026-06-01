@@ -1,0 +1,25 @@
+<div class="card">
+  <div class="card-body p-4">
+    <h6 class="fw-bold mb-3">문의</h6>
+    {% if my_inquiry %}
+      {% include "items/partials/inquiry_display.html" with inq=my_inquiry %}
+    {% elif inquiry_form %}
+      <form hx-post="{% url 'inquiry_create' item.pk %}"
+            hx-target="#inquiry-section"
+            hx-swap="innerHTML">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">문의 내용</label>
+          <textarea name="message" class="form-control" rows="3"
+                    placeholder="내 물건인 것 같은 이유나 특징을 적어주세요." required></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">연락처 (전화번호 또는 이메일)</label>
+          <input name="contact" type="text" class="form-control"
+                 placeholder="등록자가 연락할 수 있는 번호나 이메일" required>
+        </div>
+        <button type="submit" class="btn btn-dark btn-sm w-100">문의 등록</button>
+      </form>
+    {% endif %}
+  </div>
+</div>

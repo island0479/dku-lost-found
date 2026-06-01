@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-card">
+  <div class="card">
+    <div class="card-body">
+      <p class="auth-title">회원가입</p>
+      <p class="auth-subtitle">단국대학교 구성원 전용 서비스입니다</p>
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="mb-3">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+              <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% if field.errors %}
+              <div class="alert-danger mt-2">{{ field.errors.0 }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-dark w-100 mt-2">가입하기</button>
+      </form>
+      <p class="text-center mt-3 mb-0" style="font-size:0.875rem;color:var(--text-muted)">
+        이미 계정이 있으신가요? <a href="{% url 'login' %}" style="color:var(--brand)">로그인</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

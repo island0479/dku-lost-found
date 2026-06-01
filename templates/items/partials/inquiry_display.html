@@ -1,0 +1,25 @@
+<div id="inquiry-display-{{ inq.pk }}">
+  <div class="inquiry-card">
+    <div class="d-flex justify-content-between mb-2">
+      <span class="fw-semibold" style="font-size:0.875rem">내 문의</span>
+      <span style="color:var(--text-muted);font-size:0.75rem">{{ inq.created_at|date:"m/d H:i" }}</span>
+    </div>
+    <p class="mb-1" style="font-size:0.875rem;white-space:pre-line;color:var(--text)">{{ inq.message }}</p>
+    <p class="mb-3" style="font-size:0.8rem;color:var(--text-muted)">연락처: {{ inq.contact }}</p>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary"
+              hx-get="{% url 'inquiry_edit_form' item.pk inq.pk %}"
+              hx-target="#inquiry-display-{{ inq.pk }}"
+              hx-swap="outerHTML">
+        <i class="bi bi-pencil me-1"></i>수정
+      </button>
+      <button class="btn-danger-sm"
+              hx-post="{% url 'inquiry_delete' item.pk inq.pk %}"
+              hx-target="#inquiry-section"
+              hx-swap="innerHTML"
+              hx-confirm="문의를 삭제하시겠습니까?">
+        <i class="bi bi-trash me-1"></i>삭제
+      </button>
+    </div>
+  </div>
+</div>
