@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Item, Inquiry
+from .models import Item, Inquiry, AdminRequest
 
 CTRL = "form-control"
 SEL = "form-select"
@@ -55,6 +55,23 @@ class SignupForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+
+class AdminRequestForm(forms.ModelForm):
+    class Meta:
+        model = AdminRequest
+        fields = ['reason', 'attachment']
+        labels = {
+            'reason': '신청 이유',
+            'attachment': '증빙 자료 (선택)',
+        }
+        widgets = {
+            'reason': forms.Textarea(attrs={
+                'class': CTRL, 'rows': 4,
+                'placeholder': '소속(과사무실/학생회 등)과 관리자 권한이 필요한 이유를 적어주세요.',
+            }),
+            'attachment': forms.ClearableFileInput(attrs={'class': CTRL}),
+        }
 
 
 class InquiryForm(forms.ModelForm):

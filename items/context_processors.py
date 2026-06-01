@@ -1,15 +1,18 @@
-from .models import Inquiry
+from .models import Inquiry, AdminRequest
 
 
 def new_inquiry_count(request):
     if not request.user.is_authenticated:
-        return {'new_inquiry_count': 0}
-    # 내 분실물에 달린 문의 중 내가 아직 한 번도 메시지를 보내지 않은 것
-    count = (
+        return {'new_inquiry_count': 0, 'pending_admin_requests': 0}
+    inquiry_count = (
         Inquiry.objects
         .filter(item__registered_by=request.user)
         .exclude(messages__sender=request.user)
         .distinct()
         .count()
     )
-    return {'new_inquiry_count': count}
+    pending = (
+        AdminRequest.objects.filter(status='pending').count()
+        if request.user.is_superuser else 0
+    )
+    return {'new_inquiry_count': inquiry_count, 'pending_admin_requests': pending}

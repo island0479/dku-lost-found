@@ -69,6 +69,27 @@ class Inquiry(models.Model):
         ordering = ["-created_at"]
 
 
+class AdminRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', '검토 중'),
+        ('approved', '승인됨'),
+        ('rejected', '거절됨'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='admin_request')
+    reason = models.TextField()
+    attachment = models.FileField(upload_to='admin_requests/', blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    reject_reason = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_requests'
+    )
+
+    class Meta:
+        verbose_name = "관리자 신청"
+        ordering = ['-created_at']
+
+
 class Message(models.Model):
     inquiry = models.ForeignKey(Inquiry, on_delete=models.CASCADE, related_name="messages")
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")

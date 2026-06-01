@@ -23,4 +23,8 @@ urlpatterns = [
     path("chat/<int:inq_pk>/messages/", views.chat_messages_partial, name="chat_messages"),
     path("chat/<int:inq_pk>/send/", views.chat_send, name="chat_send"),
     path("chats/", views.my_chats, name="my_chats"),
+    path("admin-request/", views.admin_request, name="admin_request"),
+    path("admin-request/manage/", views.admin_request_manage, name="admin_request_manage"),
+    path("admin-request/<int:req_pk>/approve/", views.admin_request_approve, name="admin_request_approve"),
+    path("admin-request/<int:req_pk>/reject/", views.admin_request_reject, name="admin_request_reject"),
 ]

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="page-title mb-4">관리자 신청 관리</h4>
+
+<!-- 대기 중 -->
+<h6 class="fw-semibold mb-3" style="color:var(--text-muted);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px">
+  대기 중 ({{ pending|length }}건)
+</h6>
+
+{% if pending %}
+  <div class="card mb-4">
+    {% for req in pending %}
+      <div style="padding:20px;{% if not forloop.last %}border-bottom:1px solid var(--border){% endif %}">
+        <div class="d-flex justify-content-between align-items-start">
+          <div style="flex:1;min-width:0">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="fw-semibold">{{ req.user.username }}</span>
+              <span style="color:var(--text-muted);font-size:0.8rem">{{ req.user.email }}</span>
+              <span style="font-size:0.75rem;color:var(--text-muted)">{{ req.created_at|date:"m/d H:i" }}</span>
+            </div>
+            <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:8px;white-space:pre-line">{{ req.reason }}</p>
+            {% if req.attachment %}
+              <a href="{{ req.attachment.url }}" target="_blank" style="font-size:0.82rem;color:var(--brand)">
+                <i class="bi bi-paperclip me-1"></i>첨부파일 보기
+              </a>
+            {% endif %}
+          </div>
+          <div class="d-flex flex-column gap-2 ms-4 flex-shrink-0">
+            <form method="post" action="{% url 'admin_request_approve' req.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-dark btn-sm w-100">승인</button>
+            </form>
+            <form method="post" action="{% url 'admin_request_reject' req.pk %}">
+              {% csrf_token %}
+              <div class="d-flex gap-1">
+                <input name="reject_reason" type="text" class="form-control form-control-sm"
+                       placeholder="거절 사유 (선택)" style="font-size:0.8rem;padding:5px 10px">
+                <button type="submit" class="btn-danger-sm flex-shrink-0">거절</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state" style="padding:30px 20px">
+    <i class="bi bi-inbox"></i>
+    <p>대기 중인 신청이 없습니다.</p>
+  </div>
+{% endif %}
+
+<!-- 처리 완료 -->
+{% if reviewed %}
+  <h6 class="fw-semibold mb-3 mt-2" style="color:var(--text-muted);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px">
+    최근 처리 내역
+  </h6>
+  <div class="card">
+    {% for req in reviewed %}
+      <div style="padding:14px 20px;{% if not forloop.last %}border-bottom:1px solid var(--border){% endif %}" class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fw-semibold" style="font-size:0.9rem">{{ req.user.username }}</span>
+          <span style="color:var(--text-muted);font-size:0.8rem;margin-left:8px">{{ req.user.email }}</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          {% if req.status == 'approved' %}
+            <span class="badge-found">승인됨</span>
+          {% else %}
+            <span class="badge-returned">거절됨</span>
+          {% endif %}
+          <span style="font-size:0.75rem;color:var(--text-muted)">{{ req.created_at|date:"m/d" }}</span>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}
