@@ -242,13 +242,33 @@ def my_items(request):
 def signup(request):
     if request.method == "POST":
         form = SignupForm(request.POST)
-        if form.is_valid():
+        account_type = request.POST.get("account_type", "personal")
+        reason = request.POST.get("reason", "").strip()
+        org_error = None
+
+        if account_type == "org" and not reason:
+            org_error = "신청 이유를 입력해주세요."
+
+        if form.is_valid() and not org_error:
             user = form.save()
+            if account_type == "org":
+                AdminRequest.objects.create(
+                    user=user,
+                    reason=reason,
+                    attachment=request.FILES.get("attachment"),
+                )
             login(request, user)
             return redirect("item_list")
     else:
         form = SignupForm()
-    return render(request, "registration/signup.html", {"form": form})
+        account_type = "personal"
+        org_error = None
+
+    return render(request, "registration/signup.html", {
+        "form": form,
+        "account_type": account_type,
+        "org_error": org_error,
+    })
 
 
 @login_required

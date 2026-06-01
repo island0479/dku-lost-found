@@ -356,11 +356,6 @@
                                padding:1px 6px;border-radius:20px;line-height:1.6">{{ pending_admin_requests }}</span>
                 {% endif %}
               </a>
-            {% elif not user.is_staff %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'admin_request' %}">
-                <i class="bi bi-shield me-1"></i>관리자 신청
-              </a>
             {% endif %}
           </li>
           <li class="nav-item ms-lg-1">
