@@ -9,9 +9,38 @@
       <div class="card-body p-4">
         <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
+
+          <!-- 게시 유형 선택 (수정 시에는 숨김) -->
+          {% if action == '등록' %}
+          <div class="mb-4">
+            <label class="form-label">게시 유형</label>
+            <div class="d-flex gap-3">
+              <label class="type-option active" id="opt-storage">
+                <input type="radio" name="post_type" value="storage" hidden checked>
+                <i class="bi bi-box-seam"></i>
+                <div>
+                  <div class="fw-semibold" style="font-size:0.9rem">보관 중</div>
+                  <div style="font-size:0.78rem;color:var(--text-muted)">물건을 직접 갖고 있어요</div>
+                </div>
+              </label>
+              <label class="type-option" id="opt-sighting">
+                <input type="radio" name="post_type" value="sighting" hidden>
+                <i class="bi bi-eye"></i>
+                <div>
+                  <div class="fw-semibold" style="font-size:0.9rem">발견 신고</div>
+                  <div style="font-size:0.78rem;color:var(--text-muted)">위치만 제보해요 (물건 없음)</div>
+                </div>
+              </label>
+            </div>
+          </div>
+          {% else %}
+            {{ form.post_type }}
+          {% endif %}
+
           {% for field in form %}
+            {% if field.name != 'post_type' %}
             <div class="mb-3">
-              <label class="form-label">{{ field.label }}</label>
+              <label class="form-label" id="label-{{ field.name }}">{{ field.label }}</label>
               {{ field }}
               {% if field.help_text %}
                 <div class="form-text">{{ field.help_text }}</div>
@@ -20,6 +49,7 @@
                 <div class="alert-danger mt-2">{{ field.errors.0 }}</div>
               {% endif %}
             </div>
+            {% endif %}
           {% endfor %}
 
           <!-- 사진 업로드 -->
@@ -50,6 +80,30 @@
 </div>
 
 <script>
+  // 유형 선택 토글
+  document.querySelectorAll('[name="post_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.querySelectorAll('.type-option').forEach(o => o.classList.remove('active'));
+      this.closest('.type-option').classList.add('active');
+      updateLabels(this.value);
+    });
+  });
+
+  function updateLabels(type) {
+    const isSighting = type === 'sighting';
+    const locLabel = document.getElementById('label-location');
+    if (locLabel) locLabel.textContent = isSighting ? '발견 위치' : '보관 장소';
+    const desc = document.getElementById('id_description');
+    if (desc) desc.placeholder = isSighting
+      ? '발견 위치 상세, 주변 특징 등을 적어주세요.'
+      : '물건의 특징이나 상태를 적어주세요.';
+  }
+
+  // 초기화
+  const checked = document.querySelector('[name="post_type"]:checked');
+  if (checked) updateLabels(checked.value);
+
+  // 사진 미리보기
   document.getElementById('img-input').addEventListener('change', function() {
     const preview = document.getElementById('img-preview');
     preview.innerHTML = '';

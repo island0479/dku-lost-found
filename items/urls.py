@@ -13,6 +13,7 @@ urlpatterns = [
     path("item/<int:pk>/delete/", views.item_delete, name="item_delete"),
     path("item/<int:pk>/return/", views.item_return, name="item_return"),
     path("item/<int:pk>/revert/", views.item_revert, name="item_revert"),
+    path("item/<int:pk>/found/", views.item_found, name="item_found"),
     path("item/<int:pk>/inquiry/add/", views.inquiry_create, name="inquiry_create"),
     path("item/<int:pk>/inquiry/<int:inq_pk>/", views.inquiry_display, name="inquiry_display"),
     path("item/<int:pk>/inquiry/<int:inq_pk>/edit/", views.inquiry_edit_form, name="inquiry_edit_form"),

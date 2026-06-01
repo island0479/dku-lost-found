@@ -10,8 +10,9 @@ SEL = "form-select"
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ["title", "category", "location", "found_date", "description"]
+        fields = ["post_type", "title", "category", "location", "found_date", "description"]
         widgets = {
+            "post_type": forms.HiddenInput(),
             "title": forms.TextInput(attrs={"class": CTRL}),
             "category": forms.Select(attrs={"class": SEL}),
             "location": forms.TextInput(attrs={"class": CTRL}),

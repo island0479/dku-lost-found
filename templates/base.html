@@ -195,6 +195,29 @@
       padding: 4px 10px; border-radius: 20px;
       white-space: nowrap; display: inline-block;
     }
+    .badge-sighting {
+      background-color: #FFF4E6; color: #B95000;
+      font-weight: 600; font-size: 0.75rem;
+      padding: 4px 10px; border-radius: 20px;
+      white-space: nowrap; display: inline-block;
+    }
+    .badge-resolved {
+      background-color: #F2F4F6; color: #8B95A1;
+      font-weight: 600; font-size: 0.75rem;
+      padding: 4px 10px; border-radius: 20px;
+      white-space: nowrap; display: inline-block;
+    }
+    /* 게시 유형 선택 버튼 */
+    .type-option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; border: 1.5px solid var(--border);
+      border-radius: 12px; cursor: pointer; flex: 1;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .type-option.active {
+      border-color: var(--brand); background: var(--brand-light);
+    }
+    .type-option i { font-size: 1.4rem; color: var(--brand); }
     /* Page title */
     .page-title { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; }
     /* Search bar */

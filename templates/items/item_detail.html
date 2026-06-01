@@ -5,9 +5,14 @@
   <div>
     <h4 class="page-title mb-1">
       {{ item.title }}
-      <span class="ms-2 {% if item.status == 'found' %}badge-found{% else %}badge-returned{% endif %}">
-        {{ item.get_status_display }}
-      </span>
+      {% if item.post_type == 'sighting' %}
+        <span class="ms-2 badge-sighting">발견 신고</span>
+        {% if item.status == 'returned' %}<span class="ms-1 badge-resolved">해결됨</span>{% endif %}
+      {% else %}
+        <span class="ms-2 {% if item.status == 'found' %}badge-found{% else %}badge-returned{% endif %}">
+          {{ item.get_status_display }}
+        </span>
+      {% endif %}
     </h4>
   </div>
   <div class="d-flex gap-2 flex-shrink-0">
@@ -45,7 +50,7 @@
         <div class="row g-3 mb-3">
           <div class="col-6">
             <div class="info-row">
-              <span class="info-label">발견 장소</span>
+              <span class="info-label">{% if item.post_type == 'sighting' %}발견 위치{% else %}보관 장소{% endif %}</span>
               <span class="info-value">{{ item.location }}</span>
             </div>
           </div>
@@ -78,7 +83,7 @@
           <p style="color:var(--text-secondary);white-space:pre-line;font-size:0.925rem">{{ item.description }}</p>
         {% endif %}
 
-        {% if can_manage %}
+        {% if can_manage and item.post_type == 'storage' %}
           <hr style="border-color:var(--border)">
           {% if item.status == 'found' %}
             <p class="fw-semibold mb-2" style="font-size:0.9rem">반환 처리</p>
@@ -132,6 +137,21 @@
 
   <!-- 오른쪽: 문의 -->
   <div class="col-lg-4">
+    {% if item.post_type == 'sighting' and item.status == 'found' and user.is_authenticated %}
+      <div class="card mb-3">
+        <div class="card-body p-4 text-center">
+          <p class="fw-semibold mb-1" style="font-size:0.95rem">이 물건을 찾으셨나요?</p>
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px">직접 찾으셨다면 해결됨으로 표시해주세요</p>
+          <form method="post" action="{% url 'item_found' item.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-dark btn-sm w-100">
+              <i class="bi bi-check-circle me-1"></i>찾았어요
+            </button>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
     {% if can_manage %}
       <div class="card">
         <div class="card-body p-4">

@@ -134,6 +134,16 @@ def item_return(request, pk):
 
 
 @login_required
+def item_found(request, pk):
+    """발견 신고 게시글을 '해결됨'으로 처리 (누구나 가능)"""
+    item = get_object_or_404(Item, pk=pk, post_type='sighting')
+    if request.method == 'POST':
+        item.status = 'returned'
+        item.save()
+    return redirect('item_detail', pk=pk)
+
+
+@login_required
 def item_revert(request, pk):
     item = get_object_or_404(Item, pk=pk)
     if not (request.user.is_staff or request.user == item.registered_by):
