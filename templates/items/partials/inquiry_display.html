@@ -5,7 +5,6 @@
       <span style="color:var(--text-muted);font-size:0.75rem">{{ inq.created_at|date:"m/d H:i" }}</span>
     </div>
     <p class="mb-1" style="font-size:0.875rem;white-space:pre-line;color:var(--text)">{{ inq.message }}</p>
-    <p class="mb-3" style="font-size:0.8rem;color:var(--text-muted)">연락처: {{ inq.contact }}</p>
     <div class="d-flex gap-2">
       <a href="{% url 'chat' inq.pk %}" class="btn btn-dark btn-sm">
         <i class="bi bi-chat me-1"></i>채팅하기
