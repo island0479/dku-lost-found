@@ -11,6 +11,8 @@ from .forms import ItemForm, InquiryForm, SignupForm
 
 def _filter_items(request):
     qs = Item.objects.select_related('category').prefetch_related('images')
+    if request.user.is_authenticated:
+        qs = qs.exclude(registered_by=request.user)
     q = request.GET.get("q", "").strip()
     category_id = request.GET.get("category", "")
     show_all = request.GET.get("show_all", "")
@@ -213,8 +215,18 @@ def inquiry_delete(request, pk, inq_pk):
 
 @login_required
 def my_items(request):
-    items = Item.objects.filter(registered_by=request.user).prefetch_related('images').select_related('category')
-    return render(request, "items/my_items.html", {"items": items})
+    items = list(
+        Item.objects
+        .filter(registered_by=request.user)
+        .prefetch_related('images', 'inquiries__messages')
+        .select_related('category')
+    )
+    for item in items:
+        item.new_inquiry_count = sum(
+            1 for inq in item.inquiries.all()
+            if not any(m.sender_id == request.user.pk for m in inq.messages.all())
+        )
+    return render(request, 'items/my_items.html', {'items': items})
 
 
 def signup(request):

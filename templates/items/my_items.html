@@ -11,7 +11,7 @@
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
     {% for item in items %}
       <div class="col">
-        <div class="card h-100 item-card">
+        <div class="card h-100 item-card" style="position:relative">
           {% with first_img=item.images.first %}
             {% if item.image %}
               <img src="{{ item.image.url }}" class="card-img-top" style="height:160px;object-fit:cover" alt="{{ item.title }}">
@@ -37,10 +37,16 @@
               <i class="bi bi-calendar3 me-1"></i>{{ item.found_date }}
               {% if item.status == 'found' %}
                 &nbsp;·&nbsp;문의 {{ item.inquiries.count }}건
+                {% if item.new_inquiry_count %}
+                  <span style="background:var(--brand);color:#fff;font-size:0.7rem;font-weight:700;
+                               padding:1px 7px;border-radius:20px;margin-left:4px">NEW {{ item.new_inquiry_count }}</span>
+                {% endif %}
               {% endif %}
             </p>
-            <div class="d-flex gap-2">
-              <a href="{% url 'item_detail' item.pk %}" class="btn btn-dark btn-sm">상세보기</a>
+            <!-- 카드 전체 클릭 링크 -->
+            <a href="{% url 'item_detail' item.pk %}" class="stretched-link"></a>
+            <!-- 수정 버튼은 stretched-link 위에 떠있도록 position:relative -->
+            <div style="position:relative;z-index:2">
               <a href="{% url 'item_update' item.pk %}" class="btn btn-outline-secondary btn-sm">수정</a>
             </div>
           </div>
