@@ -6,7 +6,7 @@
     <h4 class="page-title mb-1">
       {{ item.title }}
       {% if item.post_type == 'sighting' %}
-        <span class="ms-2 badge-sighting">분실물 발견</span>
+        <span class="ms-2 badge-sighting">분실물 신고</span>
         {% if item.status == 'returned' %}<span class="ms-1 badge-resolved">해결됨</span>{% endif %}
       {% else %}
         <span class="ms-2 {% if item.status == 'found' %}badge-found{% else %}badge-returned{% endif %}">

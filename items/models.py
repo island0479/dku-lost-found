@@ -20,7 +20,7 @@ class Item(models.Model):
     ]
     POST_TYPE_CHOICES = [
         ("storage", "보관 중"),
-        ("sighting", "분실물 발견"),
+        ("sighting", "분실물 신고"),
     ]
 
     post_type = models.CharField(max_length=20, choices=POST_TYPE_CHOICES, default="storage")
