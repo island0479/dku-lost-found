@@ -1,9 +1,6 @@
 {% for msg in chat_messages %}
   <div class="d-flex {% if msg.sender == request.user %}justify-content-end{% else %}justify-content-start{% endif %} mb-2">
     <div style="max-width:72%">
-      {% if msg.sender != request.user %}
-        <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:3px;padding-left:4px">{{ msg.sender.username }}</div>
-      {% endif %}
       <div style="
         padding:10px 14px;
         border-radius:{% if msg.sender == request.user %}16px 16px 4px 16px{% else %}16px 16px 16px 4px{% endif %};
@@ -24,8 +21,8 @@
     </div>
   </div>
 {% empty %}
-  <div class="text-center py-5" style="color:var(--text-muted)">
-    <i class="bi bi-chat" style="font-size:2.5rem;display:block;margin-bottom:10px"></i>
-    <p style="font-size:0.875rem">대화를 시작해보세요</p>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-muted)">
+    <i class="bi bi-chat" style="font-size:2.5rem;margin-bottom:10px"></i>
+    <p style="font-size:0.875rem;margin:0">대화를 시작해보세요</p>
   </div>
 {% endfor %}

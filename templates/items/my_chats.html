@@ -5,12 +5,18 @@
 {% if inquiries %}
   <div class="card">
     {% for inq in inquiries %}
+      {% with last=inq.messages.last %}
       <a href="{% url 'chat' inq.pk %}" style="text-decoration:none;color:inherit">
-        <div style="padding:16px 20px;border-bottom:1px solid var(--border);transition:background 0.12s"
-             onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);transition:background 0.12s;
+                    {% if last and last.sender != request.user %}background:var(--brand-light){% endif %}"
+             onmouseover="this.style.background='var(--bg)'"
+             onmouseout="this.style.background='{% if last and last.sender != request.user %}var(--brand-light){% endif %}'">
           <div class="d-flex justify-content-between align-items-start">
             <div style="min-width:0">
               <div class="d-flex align-items-center gap-2 mb-1">
+                {% if last and last.sender != request.user %}
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0;display:inline-block"></span>
+                {% endif %}
                 <span class="fw-semibold" style="font-size:0.925rem">{{ inq.item.title }}</span>
                 <span class="{% if inq.item.status == 'found' %}badge-found{% else %}badge-returned{% endif %}">
                   {{ inq.item.get_status_display }}
@@ -18,33 +24,30 @@
               </div>
               <div style="font-size:0.8rem;color:var(--text-muted)">
                 {% if request.user == inq.user %}
-                  <i class="bi bi-person me-1"></i>{{ inq.item.registered_by.username }}과의 대화
+                  <i class="bi bi-person me-1"></i>{{ inq.item.registered_by.first_name|default:inq.item.registered_by.username }}과의 대화
                 {% else %}
-                  <i class="bi bi-person me-1"></i>{{ inq.user.username }}과의 대화
+                  <i class="bi bi-person me-1"></i>{{ inq.user.first_name|default:inq.user.username }}과의 대화
                 {% endif %}
               </div>
-              {% with last=inq.messages.last %}
-                {% if last %}
-                  <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;
-                               overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                    {% if last.sender == request.user %}나: {% endif %}{{ last.content }}
-                  </div>
-                {% else %}
-                  <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px">
-                    {{ inq.message|truncatechars:40 }}
-                  </div>
-                {% endif %}
-              {% endwith %}
+              {% if last %}
+                <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;
+                             overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                  {% if last.sender == request.user %}나: {% endif %}{{ last.content }}
+                </div>
+              {% else %}
+                <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px">
+                  {{ inq.message|truncatechars:40 }}
+                </div>
+              {% endif %}
             </div>
             <div style="font-size:0.75rem;color:var(--text-muted);flex-shrink:0;margin-left:12px;margin-top:2px">
-              {% with last=inq.messages.last %}
-                {% if last %}{{ last.created_at|date:"m/d H:i" }}
-                {% else %}{{ inq.created_at|date:"m/d" }}{% endif %}
-              {% endwith %}
+              {% if last %}{{ last.created_at|date:"m/d H:i" }}
+              {% else %}{{ inq.created_at|date:"m/d" }}{% endif %}
             </div>
           </div>
         </div>
       </a>
+      {% endwith %}
     {% endfor %}
   </div>
 {% else %}

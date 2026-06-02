@@ -72,7 +72,7 @@
           <div class="col-6">
             <div class="info-row">
               <span class="info-label">등록자</span>
-              <span class="info-value">{{ item.registered_by.username }}</span>
+              <span class="info-value">{{ item.registered_by.first_name|default:item.registered_by.username }}</span>
             </div>
           </div>
           {% endif %}
@@ -95,7 +95,7 @@
                   <select name="inquiry_id" class="form-select form-select-sm">
                     <option value="">없음</option>
                     {% for inq in inquiries %}
-                      <option value="{{ inq.pk }}">{{ inq.user.username }} — {{ inq.message|truncatechars:30 }}</option>
+                      <option value="{{ inq.pk }}">{{ inq.user.first_name|default:inq.user.username }} — {{ inq.message|truncatechars:30 }}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -108,7 +108,7 @@
             <div class="d-flex align-items-center gap-3 flex-wrap">
               {% if item.returned_to %}
                 <span style="font-size:0.875rem;color:var(--text-secondary)">
-                  반환 대상: <strong>{{ item.returned_to.user.username }}</strong>
+                  반환 대상: <strong>{{ item.returned_to.user.first_name|default:item.returned_to.user.username }}</strong>
                 </span>
               {% endif %}
               <form method="post" action="{% url 'item_revert' item.pk %}">
@@ -171,7 +171,7 @@
             {% for inq in inquiries %}
               <div class="inquiry-card {% if item.returned_to == inq %}border border-primary{% endif %}">
                 <div class="d-flex justify-content-between mb-1">
-                  <span class="fw-semibold" style="font-size:0.875rem">{{ inq.user.username }}</span>
+                  <span class="fw-semibold" style="font-size:0.875rem">{{ inq.user.first_name|default:inq.user.username }}</span>
                   <span style="color:var(--text-muted);font-size:0.75rem">{{ inq.created_at|date:"m/d H:i" }}</span>
                 </div>
                 <p class="mb-1" style="font-size:0.875rem;white-space:pre-line">{{ inq.message }}</p>

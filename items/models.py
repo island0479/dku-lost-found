@@ -22,8 +22,13 @@ class Item(models.Model):
         ("storage", "보관 중"),
         ("sighting", "분실물 신고"),
     ]
+    CAMPUS_CHOICES = [
+        ("jukjeon", "죽전"),
+        ("cheonan", "천안"),
+    ]
 
     post_type = models.CharField(max_length=20, choices=POST_TYPE_CHOICES, default="storage")
+    campus = models.CharField(max_length=20, choices=CAMPUS_CHOICES, default="jukjeon")
     title = models.CharField(max_length=100)
     description = models.TextField()
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)

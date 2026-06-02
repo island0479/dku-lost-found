@@ -140,7 +140,10 @@ CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
 
-AUTHENTICATION_BACKENDS = ['items.backends.EmailBackend']
+AUTHENTICATION_BACKENDS = [
+    'items.backends.EmailBackend',           # 분실물 사이트: 이메일로 로그인
+    'django.contrib.auth.backends.ModelBackend',  # Django admin: 아이디로 로그인
+]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

@@ -3,14 +3,20 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
+from django.db import IntegrityError
 from django.contrib.auth.forms import PasswordChangeForm
 from django.db.models import Q, Max
 from .models import Item, Category, Inquiry, ItemImage, Message
 from .forms import ItemForm, InquiryForm, SignupForm
 
 
+def _get_campus(request):
+    return request.session.get('campus', 'jukjeon')
+
+
 def _filter_items(request):
     qs = Item.objects.select_related('category').prefetch_related('images')
+    qs = qs.filter(campus=_get_campus(request))
     if request.user.is_authenticated:
         qs = qs.exclude(registered_by=request.user)
     q = request.GET.get("q", "").strip()
@@ -73,6 +79,7 @@ def item_create(request):
         if form.is_valid():
             item = form.save(commit=False)
             item.registered_by = request.user
+            item.campus = _get_campus(request)
             item.save()
             for i, img in enumerate(request.FILES.getlist("images")):
                 ItemImage.objects.create(item=item, image=img, order=i)
@@ -244,12 +251,23 @@ def signup(request):
     if request.method == "POST":
         form = SignupForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect("item_list")
+            try:
+                user = form.save()
+                login(request, user, backend='items.backends.EmailBackend')
+                return redirect("item_list")
+            except IntegrityError:
+                form.add_error('username', '이미 사용 중인 아이디입니다.')
     else:
         form = SignupForm()
     return render(request, "registration/signup.html", {"form": form})
+
+
+def switch_campus(request):
+    if request.method == "POST":
+        campus = request.POST.get("campus", "jukjeon")
+        if campus in ("jukjeon", "cheonan"):
+            request.session["campus"] = campus
+    return redirect(request.POST.get("next", "item_list"))
 
 
 @login_required

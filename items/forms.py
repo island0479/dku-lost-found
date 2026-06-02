@@ -22,10 +22,10 @@ class ItemForm(forms.ModelForm):
 
 
 class SignupForm(UserCreationForm):
-    username = forms.CharField(
+    display_name = forms.CharField(
         label="아이디",
-        max_length=50,
-        help_text="게시물에 표시되는 이름입니다. 한글, 영문, 숫자, 공백 사용 가능",
+        max_length=100,
+        help_text="게시물에 표시되는 이름입니다. 한글, 영문, 숫자, 공백 모두 사용 가능",
         widget=forms.TextInput(attrs={
             "class": CTRL,
             "placeholder": "예: AI융합대학 소울 학생회",
@@ -39,18 +39,20 @@ class SignupForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ["username", "email", "password1", "password2"]
+        fields = ["display_name", "email", "password1", "password2"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["password1"].widget.attrs["class"] = CTRL
         self.fields["password2"].widget.attrs["class"] = CTRL
 
-    def clean_username(self):
-        username = self.cleaned_data.get("username")
-        if User.objects.filter(username=username).exists():
+    def clean_display_name(self):
+        name = self.cleaned_data.get("display_name", "").strip()
+        if not name:
+            raise forms.ValidationError("아이디를 입력해주세요.")
+        if User.objects.filter(first_name=name).exists():
             raise forms.ValidationError("이미 사용 중인 아이디입니다.")
-        return username
+        return name
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
@@ -63,6 +65,15 @@ class SignupForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
+        user.first_name = self.cleaned_data["display_name"]
+        # username은 이메일 앞부분으로 자동 생성 (중복 시 숫자 추가)
+        base = self.cleaned_data["email"].split("@")[0]
+        username = base
+        n = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base}_{n}"
+            n += 1
+        user.username = username
         if commit:
             user.save()
         return user

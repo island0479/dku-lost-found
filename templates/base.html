@@ -90,9 +90,10 @@
       user-select: none;
     }
     .user-dropdown {
-      display: none;
+      opacity: 0;
+      visibility: hidden;
       position: absolute;
-      top: calc(100% + 8px);
+      top: calc(100% + 4px);
       left: 50%;
       transform: translateX(-50%);
       background: var(--surface);
@@ -102,8 +103,14 @@
       min-width: 160px;
       z-index: 1000;
       overflow: hidden;
+      transition: opacity 0.15s, visibility 0.15s;
+      transition-delay: 0.15s; /* 사라질 때 0.15초 대기 */
     }
-    .user-dropdown-wrapper:hover .user-dropdown { display: block; }
+    .user-dropdown-wrapper:hover .user-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transition-delay: 0s; /* 나타날 때는 즉시 */
+    }
     .user-dropdown a {
       display: block;
       padding: 11px 16px;
@@ -218,6 +225,37 @@
       border-color: var(--brand); background: var(--brand-light);
     }
     .type-option i { font-size: 1.4rem; color: var(--brand); }
+    /* 캠퍼스 드롭다운 */
+    .campus-wrapper { position: relative; display: inline-flex; align-items: center; }
+    .campus-trigger {
+      font-size: 0.8rem; font-weight: 600;
+      color: var(--brand); background: var(--brand-light);
+      border: 1.5px solid var(--brand); border-radius: 8px;
+      padding: 3px 10px; cursor: pointer; user-select: none;
+      display: inline-flex; align-items: center; gap: 4px;
+      transition: background 0.15s;
+    }
+    .campus-trigger:hover { background: #d6e6ff; }
+    .campus-dropdown {
+      opacity: 0; visibility: hidden;
+      position: absolute; top: calc(100% + 6px); left: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; box-shadow: var(--shadow-hover);
+      min-width: 100px; z-index: 1000; overflow: hidden;
+      transition: opacity 0.15s, visibility 0.15s;
+      transition-delay: 0.15s;
+    }
+    .campus-wrapper:hover .campus-dropdown {
+      opacity: 1; visibility: visible; transition-delay: 0s;
+    }
+    .campus-dropdown button {
+      display: block; width: 100%; padding: 10px 14px;
+      text-align: left; background: none; border: none;
+      font-size: 0.875rem; color: var(--text); cursor: pointer;
+      transition: background 0.12s;
+    }
+    .campus-dropdown button:hover { background: var(--bg); }
+    .campus-dropdown button.active { color: var(--brand); font-weight: 700; }
     /* Page title */
     .page-title { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; }
     /* Search bar */
@@ -310,9 +348,28 @@
 <body>
 <nav class="navbar navbar-expand-lg">
   <div class="container">
-    <a class="navbar-brand" href="{% url 'item_list' %}">
+    <a class="navbar-brand me-3" href="{% url 'item_list' %}">
       <i class="bi bi-search-heart me-2"></i>DKU 분실물 센터
     </a>
+    <div class="campus-wrapper">
+      <span class="campus-trigger">
+        {{ current_campus_name }}<i class="bi bi-chevron-down" style="font-size:0.65rem"></i>
+      </span>
+      <div class="campus-dropdown">
+        <form method="post" action="{% url 'switch_campus' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <button type="submit" name="campus" value="jukjeon"
+                  class="{% if current_campus == 'jukjeon' %}active{% endif %}">
+            죽전
+          </button>
+          <button type="submit" name="campus" value="cheonan"
+                  class="{% if current_campus == 'cheonan' %}active{% endif %}">
+            천안
+          </button>
+        </form>
+      </div>
+    </div>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -321,7 +378,7 @@
         {% if user.is_authenticated %}
           <li class="nav-item user-dropdown-wrapper">
             <span class="navbar-user nav-link">
-              <i class="bi bi-person-circle me-1"></i>{{ user.username }}<i class="bi bi-chevron-down ms-1" style="font-size:0.7rem;opacity:0.5"></i>
+              <i class="bi bi-person-circle me-1"></i>{{ user.first_name|default:user.username }}<i class="bi bi-chevron-down ms-1" style="font-size:0.7rem;opacity:0.5"></i>
             </span>
             <div class="user-dropdown">
               <a href="{% url 'change_password' %}">계정 설정</a>
