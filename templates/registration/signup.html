@@ -1,40 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="auth-card" style="max-width:480px">
+<div class="auth-card">
   <div class="card">
     <div class="card-body">
       <p class="auth-title">회원가입</p>
       <p class="auth-subtitle">단국대학교 구성원 전용 서비스입니다</p>
-
-      <form method="post" enctype="multipart/form-data">
+      <form method="post">
         {% csrf_token %}
-
-        <!-- 계정 유형 선택 -->
-        <div class="mb-4">
-          <label class="form-label">계정 유형</label>
-          <div class="d-flex gap-3">
-            <label class="type-option {% if account_type != 'org' %}active{% endif %}" id="opt-personal">
-              <input type="radio" name="account_type" value="personal" hidden
-                     {% if account_type != 'org' %}checked{% endif %}>
-              <i class="bi bi-person"></i>
-              <div>
-                <div class="fw-semibold" style="font-size:0.9rem">개인</div>
-                <div style="font-size:0.75rem;color:var(--text-muted)">일반 학생</div>
-              </div>
-            </label>
-            <label class="type-option {% if account_type == 'org' %}active{% endif %}" id="opt-org">
-              <input type="radio" name="account_type" value="org" hidden
-                     {% if account_type == 'org' %}checked{% endif %}>
-              <i class="bi bi-building"></i>
-              <div>
-                <div class="fw-semibold" style="font-size:0.9rem">단체/기관</div>
-                <div style="font-size:0.75rem;color:var(--text-muted)">과사무실, 학생회 등</div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- 기본 가입 필드 -->
         {% for field in form %}
           <div class="mb-3">
             <label class="form-label">{{ field.label }}</label>
@@ -47,45 +19,12 @@
             {% endif %}
           </div>
         {% endfor %}
-
-        <!-- 단체/기관 전용 필드 -->
-        <div id="org-fields" style="display:{% if account_type == 'org' %}block{% else %}none{% endif %}">
-          <div style="height:1px;background:var(--border);margin:20px 0"></div>
-          <p class="fw-semibold mb-3" style="font-size:0.875rem;color:var(--text-muted)">
-            관리자 권한 신청 — 슈퍼관리자 승인 후 활성화됩니다
-          </p>
-          <div class="mb-3">
-            <label class="form-label">신청 이유 <span style="color:#D92B2B">*</span></label>
-            <textarea name="reason" class="form-control" rows="3"
-                      placeholder="소속 기관과 관리자 권한이 필요한 이유를 적어주세요.">{{ request.POST.reason }}</textarea>
-            {% if org_error %}
-              <div class="alert-danger mt-2">{{ org_error }}</div>
-            {% endif %}
-          </div>
-          <div class="mb-3">
-            <label class="form-label">증빙 자료 <span style="color:var(--text-muted);font-weight:400">(선택)</span></label>
-            <input type="file" name="attachment" class="form-control">
-          </div>
-        </div>
-
         <button type="submit" class="btn btn-dark w-100 mt-2">가입하기</button>
       </form>
-
       <p class="text-center mt-3 mb-0" style="font-size:0.875rem;color:var(--text-muted)">
         이미 계정이 있으신가요? <a href="{% url 'login' %}" style="color:var(--brand)">로그인</a>
       </p>
     </div>
   </div>
 </div>
-
-<script>
-  document.querySelectorAll('[name="account_type"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-      document.querySelectorAll('.type-option').forEach(o => o.classList.remove('active'));
-      this.closest('.type-option').classList.add('active');
-      document.getElementById('org-fields').style.display =
-        this.value === 'org' ? 'block' : 'none';
-    });
-  });
-</script>
 {% endblock %}

@@ -5,8 +5,8 @@ from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.db.models import Q, Max
-from .models import Item, Category, Inquiry, ItemImage, Message, AdminRequest
-from .forms import ItemForm, InquiryForm, SignupForm, AdminRequestForm
+from .models import Item, Category, Inquiry, ItemImage, Message
+from .forms import ItemForm, InquiryForm, SignupForm
 
 
 def _filter_items(request):
@@ -243,33 +243,13 @@ def my_items(request):
 def signup(request):
     if request.method == "POST":
         form = SignupForm(request.POST)
-        account_type = request.POST.get("account_type", "personal")
-        reason = request.POST.get("reason", "").strip()
-        org_error = None
-
-        if account_type == "org" and not reason:
-            org_error = "신청 이유를 입력해주세요."
-
-        if form.is_valid() and not org_error:
+        if form.is_valid():
             user = form.save()
-            if account_type == "org":
-                AdminRequest.objects.create(
-                    user=user,
-                    reason=reason,
-                    attachment=request.FILES.get("attachment"),
-                )
             login(request, user)
             return redirect("item_list")
     else:
         form = SignupForm()
-        account_type = "personal"
-        org_error = None
-
-    return render(request, "registration/signup.html", {
-        "form": form,
-        "account_type": account_type,
-        "org_error": org_error,
-    })
+    return render(request, "registration/signup.html", {"form": form})
 
 
 @login_required
@@ -338,64 +318,6 @@ def my_chats(request):
     )
     return render(request, 'items/my_chats.html', {'inquiries': inquiries})
 
-
-@login_required
-def admin_request(request):
-    if request.user.is_staff:
-        messages.info(request, "이미 관리자 권한을 보유하고 있습니다.")
-        return redirect('item_list')
-
-    existing = AdminRequest.objects.filter(user=request.user).first()
-
-    if request.method == 'POST':
-        form = AdminRequestForm(request.POST, request.FILES, instance=existing)
-        if form.is_valid():
-            req = form.save(commit=False)
-            req.user = request.user
-            req.status = 'pending'
-            req.reject_reason = ''
-            req.save()
-            messages.success(request, "신청이 접수됐습니다. 검토 후 결과를 알려드립니다.")
-            return redirect('item_list')
-    else:
-        form = AdminRequestForm(instance=existing)
-
-    return render(request, 'admin_request/form.html', {'form': form, 'existing': existing})
-
-
-def admin_request_manage(request):
-    if not request.user.is_superuser:
-        return HttpResponseForbidden()
-    pending = AdminRequest.objects.filter(status='pending').select_related('user')
-    reviewed = AdminRequest.objects.exclude(status='pending').select_related('user', 'reviewed_by')[:20]
-    return render(request, 'admin_request/manage.html', {'pending': pending, 'reviewed': reviewed})
-
-
-def admin_request_approve(request, req_pk):
-    if not request.user.is_superuser:
-        return HttpResponseForbidden()
-    if request.method == 'POST':
-        req = get_object_or_404(AdminRequest, pk=req_pk)
-        req.status = 'approved'
-        req.reviewed_by = request.user
-        req.save()
-        req.user.is_staff = True
-        req.user.save()
-        messages.success(request, f"{req.user.username}에게 관리자 권한을 부여했습니다.")
-    return redirect('admin_request_manage')
-
-
-def admin_request_reject(request, req_pk):
-    if not request.user.is_superuser:
-        return HttpResponseForbidden()
-    if request.method == 'POST':
-        req = get_object_or_404(AdminRequest, pk=req_pk)
-        req.status = 'rejected'
-        req.reject_reason = request.POST.get('reject_reason', '')
-        req.reviewed_by = request.user
-        req.save()
-        messages.info(request, f"{req.user.username}의 신청을 거절했습니다.")
-    return redirect('admin_request_manage')
 
 
 @login_required

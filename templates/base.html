@@ -347,16 +347,6 @@
               {% endif %}
             </a>
             </li>
-            {% if user.is_superuser %}
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-1" href="{% url 'admin_request_manage' %}">
-                <i class="bi bi-shield-check"></i>신청 관리
-                {% if pending_admin_requests %}
-                  <span style="background:#D92B2B;color:#fff;font-size:0.7rem;font-weight:700;
-                               padding:1px 6px;border-radius:20px;line-height:1.6">{{ pending_admin_requests }}</span>
-                {% endif %}
-              </a>
-            {% endif %}
           </li>
           <li class="nav-item ms-lg-1">
             <form method="post" action="{% url 'logout' %}" style="display:inline">
