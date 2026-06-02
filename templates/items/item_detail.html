@@ -6,7 +6,7 @@
     <h4 class="page-title mb-1">
       {{ item.title }}
       {% if item.post_type == 'sighting' %}
-        <span class="ms-2 badge-sighting">발견 신고</span>
+        <span class="ms-2 badge-sighting">분실물 발견</span>
         {% if item.status == 'returned' %}<span class="ms-1 badge-resolved">해결됨</span>{% endif %}
       {% else %}
         <span class="ms-2 {% if item.status == 'found' %}badge-found{% else %}badge-returned{% endif %}">
@@ -137,17 +137,28 @@
 
   <!-- 오른쪽: 문의 -->
   <div class="col-lg-4">
-    {% if item.post_type == 'sighting' and item.status == 'found' and user.is_authenticated %}
+    {% if item.post_type == 'sighting' and user.is_authenticated %}
       <div class="card mb-3">
         <div class="card-body p-4 text-center">
-          <p class="fw-semibold mb-1" style="font-size:0.95rem">이 물건을 찾으셨나요?</p>
-          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px">직접 찾으셨다면 해결됨으로 표시해주세요</p>
-          <form method="post" action="{% url 'item_found' item.pk %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-dark btn-sm w-100">
-              <i class="bi bi-check-circle me-1"></i>찾았어요
-            </button>
-          </form>
+          {% if item.status == 'found' %}
+            <p class="fw-semibold mb-1" style="font-size:0.95rem">이 물건을 찾으셨나요?</p>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px">직접 찾으셨다면 해결됨으로 표시해주세요</p>
+            <form method="post" action="{% url 'item_found' item.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-dark btn-sm w-100">
+                <i class="bi bi-check-circle me-1"></i>찾았어요
+              </button>
+            </form>
+          {% else %}
+            <p class="fw-semibold mb-1" style="font-size:0.95rem">해결됨으로 표시된 글입니다</p>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px">잘못 표시됐다면 되돌릴 수 있습니다</p>
+            <form method="post" action="{% url 'item_revert' item.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>되돌리기
+              </button>
+            </form>
+          {% endif %}
         </div>
       </div>
     {% endif %}

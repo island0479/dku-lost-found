@@ -146,7 +146,8 @@ def item_found(request, pk):
 @login_required
 def item_revert(request, pk):
     item = get_object_or_404(Item, pk=pk)
-    if not (request.user.is_staff or request.user == item.registered_by):
+    # 발견 신고 글은 누구나, 보관 중 글은 관리자만 되돌리기 가능
+    if item.post_type == 'storage' and not (request.user.is_staff or request.user == item.registered_by):
         return HttpResponseForbidden()
     if request.method == "POST":
         item.status = "found"
